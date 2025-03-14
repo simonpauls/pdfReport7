@@ -473,7 +473,6 @@ class pdfReport extends PluginBase
             }
         }
             $sessionSurvey = Yii::app()->session["survey_{$this->surveyId}"];
-            $inputName = "476956X391X26989";
     }
 
     /**
@@ -502,7 +501,7 @@ class pdfReport extends PluginBase
             throw new CHttpException(403);
         }
         $oEvent = $this->event;
-        if ($oEvent->get('target') != get_class()) {
+        if ($oEvent->get('target') != __CLASS__) {
             return;
         }
 
