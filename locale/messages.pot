@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: pdfReport\n"
-"POT-Creation-Date: 2024-06-27 15:58+0200\n"
+"POT-Creation-Date: 2025-08-27 16:23+0200\n"
 "PO-Revision-Date: 2017-03-09 15:09+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -17,153 +17,153 @@ msgstr ""
 "X-Poedit-KeywordsList: translate\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: pdfReport.php:190
+#: pdfReport.php:200
 #, php-format
 msgid "To allow user to get the file of the question number X at end : you can use this url: %s. Replacing %s by the question number (LimeSurvey replace %s by the survey number)."
 msgstr ""
 
-#: pdfReport.php:208 pdfReport.php:217 pdfReport.php:228 pdfReport.php:239
-#: pdfReport.php:251 pdfReport.php:265 pdfReport.php:279 pdfReport.php:294
-#: pdfReport.php:305 pdfReport.php:321 pdfReport.php:332 pdfReport.php:341
+#: pdfReport.php:218 pdfReport.php:227 pdfReport.php:238 pdfReport.php:249
+#: pdfReport.php:261 pdfReport.php:275 pdfReport.php:289 pdfReport.php:304
+#: pdfReport.php:315 pdfReport.php:331 pdfReport.php:342 pdfReport.php:351
 msgid "PDF report"
 msgstr ""
 
-#: pdfReport.php:212
+#: pdfReport.php:222
 msgid "The pdf are saved inside question answers, it‘s better if you hide the question, else only answers part are hidden."
 msgstr ""
 
-#: pdfReport.php:213
+#: pdfReport.php:223
 msgid "Use this question as pdf report."
 msgstr ""
 
-#: pdfReport.php:223
+#: pdfReport.php:233
 #, php-format
 msgid "Set it as header in the final pdf, same behaviour than PDF header title at %sLimeSurvey global settings%s."
 msgstr ""
 
-#: pdfReport.php:224
+#: pdfReport.php:234
 msgid "Title for the pdf."
 msgstr ""
 
-#: pdfReport.php:234
+#: pdfReport.php:244
 #, php-format
 msgid "Use as sub-header in the final pdf, same behaviour than PDF header string at %sLimeSurvey global settings%s."
 msgstr ""
 
-#: pdfReport.php:235
+#: pdfReport.php:245
 msgid "Sub title for the pdf."
 msgstr ""
 
-#: pdfReport.php:245
+#: pdfReport.php:255
 msgid "This allow better edition without HTML editor and/or XSS."
 msgstr ""
 
-#: pdfReport.php:246
+#: pdfReport.php:256
 msgid "Content of the PDF, leave empty to use question text."
 msgstr ""
 
-#: pdfReport.php:256
+#: pdfReport.php:266
 msgid "Allow public download (with the link)."
 msgstr ""
 
-#: pdfReport.php:257 pdfReport.php:261
+#: pdfReport.php:267 pdfReport.php:271
 msgid "Replace public print answer."
 msgstr ""
 
-#: pdfReport.php:260
+#: pdfReport.php:270
 msgid "Allow to download pdf after submitted the survey, see plugin settings for url. Optionnaly replace the default print answer by a dowload link of the pdf."
 msgstr ""
 
-#: pdfReport.php:274
+#: pdfReport.php:284
 msgid "By default usage of the question code. You don‘t have to put the .pdf part."
 msgstr ""
 
-#: pdfReport.php:275
+#: pdfReport.php:285
 msgid "Name of saved PDF file."
 msgstr ""
 
-#: pdfReport.php:283
+#: pdfReport.php:293
 msgid "No filter"
 msgstr ""
 
-#: pdfReport.php:284
+#: pdfReport.php:294
 msgid "Basic filter"
 msgstr ""
 
-#: pdfReport.php:285
+#: pdfReport.php:295
 msgid "Alphanumeric only"
 msgstr ""
 
-#: pdfReport.php:286
+#: pdfReport.php:296
 msgid "Alphanumeric and lower case"
 msgstr ""
 
-#: pdfReport.php:289
+#: pdfReport.php:299
 msgid "Basic filter try to remove invalid an dangerous character, use “no filter” with caution. If there are a filter, filename is limited to 254 character. With alphanumeric space was replaced by -."
 msgstr ""
 
-#: pdfReport.php:290
+#: pdfReport.php:300
 msgid "Sanitization of the file name."
 msgstr ""
 
-#: pdfReport.php:300
+#: pdfReport.php:310
 msgid "Optionnal email to send pdf Report. You can use Expression manager and multiple email. For multiple email : you must use <code>;</code> as separator. Each email was checked for validity."
 msgstr ""
 
-#: pdfReport.php:301
+#: pdfReport.php:311
 msgid "Send it by email to"
 msgstr ""
 
-#: pdfReport.php:309
+#: pdfReport.php:319
 msgid "Confirmation email"
 msgstr ""
 
-#: pdfReport.php:310
+#: pdfReport.php:320
 msgid "Basic admin notification"
 msgstr ""
 
-#: pdfReport.php:311
+#: pdfReport.php:321
 msgid "Detailed admin notification"
 msgstr ""
 
-#: pdfReport.php:316
+#: pdfReport.php:326
 msgid "This don‘t deactivate limesurvey other email system. Remind to deactivate LimeSurvey system if you this one."
 msgstr ""
 
-#: pdfReport.php:317
+#: pdfReport.php:327
 msgid "Content and subject of the email"
 msgstr ""
 
-#: pdfReport.php:325
+#: pdfReport.php:335
 msgid "Add existing attachements of the email templates from LimeSurvey."
 msgstr ""
 
-#: pdfReport.php:326
+#: pdfReport.php:336
 msgid "Add attachements of email"
 msgstr ""
 
-#: pdfReport.php:336
+#: pdfReport.php:346
 msgid "You have limeMpdf plugin allowing more class, but don‘t use pdfreport.css. Then if you need usage of pdfreport.css: you can choose to use old tcpdf system."
 msgstr ""
 
-#: pdfReport.php:337
+#: pdfReport.php:347
 msgid "Use limeMpdf"
 msgstr ""
 
-#: pdfReport.php:345
+#: pdfReport.php:355
 msgid "Plugin limeMpdf allow table of content using h1, h2 etc … then adding title in your pdf set a table of contents."
 msgstr ""
 
-#: pdfReport.php:346
+#: pdfReport.php:356
 msgid "Create a PDF table of content"
 msgstr ""
 
-#: pdfReport.php:349
+#: pdfReport.php:359
 #, php-format
 msgid "Set it as header in the final pdf with %s, same behaviour than PDF header title at %sLimeSurvey global settings%s. Used as %s in %s of %s theme twig files."
 msgstr ""
 
-#: pdfReport.php:358
+#: pdfReport.php:368
 #, php-format
 msgid "Set it as sub header in the final pdf with %s, same behaviour than PDF header string at %sLimeSurvey global settings%s. Used as %s in %s of %s theme twig files."
 msgstr ""
