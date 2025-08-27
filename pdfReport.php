@@ -9,7 +9,7 @@
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 2.3.1
+ * @version 2.3.3
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -65,6 +65,7 @@ class pdfReport extends PluginBase
         $surveyId = $this->surveyId = $this->getEvent()->get('surveyId');
         $language = App()->getlanguage();
         $sessionSurvey = Yii::app()->session["survey_{$surveyId}"];
+
         if (empty($sessionSurvey['fieldnamesInfo'])) {
             return;
         }
@@ -73,11 +74,15 @@ class pdfReport extends PluginBase
         }
         if (!isset($sessionSurvey['pdfreport'])) {
             $oSurvey = Survey::model()->findByPk($surveyId);
+            $surveyFormat = $oSurvey->format;
+            if (isset($oSurvey->oOptions->format)) {
+                $surveyFormat = $oSurvey->oOptions->format;
+            }
             $criteria = new CDbCriteria();
             $criteria->select = ['t.qid as qid', 'gid'];
             $criteria->join = 'JOIN {{question_attributes}} as questionattributes ON ' . App()->getDb()->quoteColumnName("t.qid") . '=' . App()->getDb()->quoteColumnName("questionattributes.qid");
-            $criteria->condition = 't.sid = :sid and questionattributes.attribute = :attribute and questionattributes.value = :value';
-            $criteria->params = [':sid' => $surveyId, ':attribute' => 'pdfReport', ':value' => '<>0'];
+            $criteria->condition = 't.sid = :sid and questionattributes.attribute LIKE :attribute and questionattributes.value = :value';
+            $criteria->params = [':sid' => $surveyId, ':attribute' => 'pdfReport', ':value' => '1'];
             /* language */
             if (intval(App()->getConfig("versionnumber")) <= 3) {
                 $criteria->compare(App()->getDb()->quoteColumnName("t.language"), $language);
@@ -86,7 +91,7 @@ class pdfReport extends PluginBase
             $sessionPdfReports = array();
             if (!empty($oQuestionsQid)) {
                 foreach ($oQuestionsQid as $oQuestionQid) {
-                    switch ($oSurvey->format) {
+                    switch ($surveyFormat) {
                         case 'S':
                             $step = LimeExpressionManager::GetQuestionSeq($oQuestionQid->qid);
                             break;
@@ -96,6 +101,10 @@ class pdfReport extends PluginBase
                         case 'A':
                         default:
                             $step = 0;
+                    }
+                    /* In 6 and up : step start at 1 for 1 question page, 0 before */
+                    if ($step > 0 && intval(App()->getConfig('versionnumber')) >= 6) {
+                        $step++;
                     }
                     $sessionPdfReports[$oQuestionQid->qid] = $step;
                 }
@@ -127,6 +136,7 @@ class pdfReport extends PluginBase
         }
         $prevStep = $sessionSurvey['prevstep'] ?? 0;
         $actualStep = $sessionSurvey['step'] ?? 0;
+
         if ($actualStep < $prevStep) {
             return;
         }
@@ -397,6 +407,9 @@ class pdfReport extends PluginBase
     {
         $this->doPdfReportsByStep();
         $this->hideAnswerPart();
+        /* Except hideAnswerPart : need only one time */
+        $this->subscribe('beforeQuestionRender');
+        $this->subscribe('beforeQuestionRender', 'hideAnswerPart');
     }
 
     /**
