@@ -5,11 +5,13 @@
  * Use question settings to create a report and send it by email.
  *
  * @author Denis Chenu <https://sondages.pro>
+ * @author SirPauls <office@sirpauls.com>
  * @copyright 2015-2024 Denis Chenu <https://sondages.pro>
+ * @copyright 2026 SirPauls <https://github.com/simonpauls/pdfReport7>
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 2.3.3
+ * @version 3.0.0
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +24,7 @@
  * GNU General Public License for more details.
  */
 
-class pdfReport extends PluginBase
+class pdfReport extends \PluginBase
 {
     protected $storage = 'DbStorage';
     protected static $description = 'Do a PDF report for question.';
@@ -215,7 +217,7 @@ class pdfReport extends PluginBase
         $pdfReportAttribute = array(
             'pdfReport' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 1,
                 'inputtype' => 'switch',
                 'default' => 0,
@@ -224,7 +226,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportTitle' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 10,
                 'inputtype' => 'text',
                 'default' => '{SITENAME}',
@@ -235,7 +237,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSubTitle' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 11,
                 'inputtype' => 'text',
                 'default' => '{SURVEYNAME}',
@@ -246,7 +248,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportContent' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 15,
                 'inputtype' => 'textarea',
                 'default' => "",
@@ -258,7 +260,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportPrintAnswer' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 20,
                 'inputtype' => 'singleselect',
                 'options' => array(
@@ -272,7 +274,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSavedFileName' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 30,
                 'inputtype' => 'text',
                 'default' => '',
@@ -286,7 +288,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSanitizeSavedFileName' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 30,
                 'inputtype' => 'singleselect',//'buttongroup',
                 'options' => array(
@@ -301,7 +303,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSendByEmailMail' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 40,
                 'inputtype' => 'text',
                 'default' => '',
@@ -312,7 +314,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSendByEmailContent' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 45,
                 'inputtype' => 'singleselect',//'buttongroup',
                 'options' => array(
@@ -328,7 +330,7 @@ class pdfReport extends PluginBase
             ),
             'pdfReportSendByEmailAttachment' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
+                'category' => $this->translate('Other'),
                 'sortorder' => 50,
                 'inputtype' => 'switch',
                 'default' => 1,
@@ -336,52 +338,28 @@ class pdfReport extends PluginBase
                 'caption' => $this->translate('Add attachements of email'),
             ),
         );
-        if (Yii::getPathOfAlias("limeMpdf")) {
-            $pdfReportAttribute['pdfReportPdfGenerator'] = array(
-                'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
-                'sortorder' => 100,
-                'inputtype' => 'switch',
-                'default' => 1,
-                'help' => $this->translate('You have limeMpdf plugin allowing more class, but don‘t use pdfreport.css. Then if you need usage of pdfreport.css: you can choose to use old tcpdf system.'),
-                'caption' => $this->translate('Use limeMpdf'),
-            );
-            $pdfReportAttribute['pdfReportCreateToc'] = array(
-                'types' => '|', /* upload question type */
-                'category' => $this->translate('PDF report'),
-                'sortorder' => 110,
-                'inputtype' => 'switch',
-                'default' => 1,
-                'help' => $this->translate('Plugin limeMpdf allow table of content using h1, h2 etc … then adding title in your pdf set a table of contents.'),
-                'caption' => $this->translate('Create a PDF table of content'),
-            );
-            $pdfReportAttribute['pdfReportTitle']['help'] = sprintf(
-                $this->translate('Set it as header in the final pdf with %s, same behaviour than PDF header title at %sLimeSurvey global settings%s. Used as %s in %s of %s theme twig files.'),
-                "<strong>tcpdf</strong>",
-                "<a href='$pdfSettingsLink'>",
-                "</a>",
-                "<code>{{ title }}</code>",
-                "header.twig",
-                "<strong>limeMpdf</strong>"
-            );
-            $pdfReportAttribute['pdfReportSubTitle']['help'] = sprintf(
-                $this->translate('Set it as sub header in the final pdf with %s, same behaviour than PDF header string at %sLimeSurvey global settings%s. Used as %s in %s of %s theme twig files.'),
-                "<strong>tcpdf</strong>",
-                "<a href='$pdfSettingsLink'>",
-                "</a>",
-                "header.twig",
-                "<code>{{ subtitle }}</code>",
-                "<strong>limeMpdf</strong>"
-            );
-        }
+        $pdfReportAttribute['pdfReportPdfGenerator'] = array(
+            'types' => '|', /* upload question type */
+            'category' => $this->translate('Other'),
+            'sortorder' => 100,
+            'inputtype' => 'switch',
+            'default' => 1,
+            'help' => $this->translate('You have limeMpdf plugin allowing more class, but don‘t use pdfreport.css. Then if you need usage of pdfreport.css: you can choose to use old tcpdf system.'),
+            'caption' => $this->translate('Use limeMpdf'),
+        );
+        $pdfReportAttribute['pdfReportCreateToc'] = array(
+            'types' => '|', /* upload question type */
+            'category' => $this->translate('Other'),
+            'sortorder' => 110,
+            'inputtype' => 'switch',
+            'default' => 1,
+            'help' => $this->translate('Plugin limeMpdf allow table of content using h1, h2 etc … then adding title in your pdf set a table of contents.'),
+            'caption' => $this->translate('Create a PDF table of content'),
+        );
 
-        if (method_exists($this->getEvent(), 'append')) {
-            $this->getEvent()->append('questionAttributes', $pdfReportAttribute);
-        } else {
-            $questionAttributes = (array)$this->event->get('questionAttributes');
-            $questionAttributes = array_merge($questionAttributes, $pdfReportAttribute);
-            $this->event->set('questionAttributes', $questionAttributes);
-        }
+        $questionAttributes = (array)$this->getEvent()->get('questionAttributes', array());
+        $questionAttributes = array_merge($questionAttributes, $pdfReportAttribute);
+        $this->getEvent()->set('questionAttributes', $questionAttributes);
     }
 
     /**
@@ -605,7 +583,7 @@ class pdfReport extends PluginBase
             throw new CHttpException(400);
         }
         if (!$qid) {
-            $qid = $aSurveyPrintRigth['replace'];
+            $qid = $aSessionPrintRigth[$surveyid]['replace'] ?? null;
         }
 
         // Ok we get the survey and the qid
@@ -777,6 +755,15 @@ class pdfReport extends PluginBase
         $sSurveyName = $aSurvey['surveyls_title'];
         if (!defined('K_PATH_IMAGES')) {
             define('K_PATH_IMAGES', '');
+        }
+        /* Fix TCPDF paths for LimeSurvey 7 */
+        if (intval(App()->getConfig('versionnumber')) >= 6) {
+            if (!defined('K_PATH_MAIN')) {
+                define('K_PATH_MAIN', ROOT . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'tecnickcom' . DIRECTORY_SEPARATOR . 'tcpdf' . DIRECTORY_SEPARATOR);
+            }
+            if (!defined('K_PATH_FONTS')) {
+                define('K_PATH_FONTS', K_PATH_MAIN . 'fonts' . DIRECTORY_SEPARATOR);
+            }
         }
         Yii::setPathOfAlias('sendPdfReport', dirname(__FILE__));
 
