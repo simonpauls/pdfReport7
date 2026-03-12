@@ -11,7 +11,7 @@
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 3.0.0
+ * @version 3.0.1
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -711,6 +711,10 @@ class pdfReport extends \PluginBase
         /* OK, we go */
         if (!Yii::getPathOfAlias('limeMpdf') && Yii::getPathOfAlias('lime7Mpdf')) {
             Yii::setPathOfAlias('limeMpdf', Yii::getPathOfAlias('lime7Mpdf'));
+        }
+        if (Yii::getPathOfAlias('lime7Mpdf')) {
+            $event = new PluginEvent('lime7MpdfBeforePdf');
+            App()->getPluginManager()->dispatchEvent($event);
         }
         $pdfHelper = new \limeMpdf\helper\limeMpdfHelper($this->surveyId);
         $extraOtions = array();
