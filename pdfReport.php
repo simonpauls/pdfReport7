@@ -11,7 +11,7 @@
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 3.0.1
+ * @version 3.0.2
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -917,6 +917,33 @@ class pdfReport extends \PluginBase
         }
         $sAnswerColumn = "{$this->surveyId}X{$oQuestion->gid}X{$oQuestion->qid}";
         $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
+
+        $oResponse = Response::model($this->surveyId)->find('id=:id', array(':id' => $this->responseId));
+        if (!$oResponse) {
+            Yii::log("Response number {$this->responseId} invalid for survey {$this->surveyId}", 'error', 'application.plugins.pdfReport');
+            return;
+        }
+
+        /* Fix for LimeSurvey 7 / 6 new response storage or case sensitivity */
+        if (!$oResponse->hasAttribute($sAnswerColumn)) {
+            $aAttributes = $oResponse->getAttributes();
+            /* Try case insensitive match */
+            foreach (array_keys($aAttributes) as $sAttribute) {
+                if (strcasecmp($sAttribute, $sAnswerColumn) === 0) {
+                    $sAnswerColumn = $sAttribute;
+                    $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
+                    break;
+                }
+            }
+        }
+        /* Try question title (question code) if still not found (LS7 new storage) */
+        if (!$oResponse->hasAttribute($sAnswerColumn)) {
+            if ($oResponse->hasAttribute($oQuestion->title)) {
+                $sAnswerColumn = $oQuestion->title;
+                $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
+            }
+        }
+
         $uploadSurveyDir = App()->getConfig("uploaddir")
             . DIRECTORY_SEPARATOR
             . "surveys"
@@ -948,9 +975,10 @@ class pdfReport extends \PluginBase
                 'ext' => 'pdf'
             )
         );
-        $oResponse = Response::model($this->surveyId)->find('id=:id', array(':id' => $this->responseId));
         $oResponse->$sAnswerColumn = ls_json_encode($aAnswer);
-        $oResponse->$sAnswerCountColumn = 1;
+        if ($oResponse->hasAttribute($sAnswerCountColumn)) {
+            $oResponse->$sAnswerCountColumn = 1;
+        }
         if (method_exists($oResponse, 'encryptSave')) {
             $saveResult = $oResponse->encryptSave();
         } else {
@@ -961,7 +989,9 @@ class pdfReport extends \PluginBase
         }
         $sessionSurvey = Yii::app()->session["survey_{$this->surveyId}"];
         $sessionSurvey[$sAnswerColumn] = $oResponse->$sAnswerColumn;
-        $sessionSurvey[$sAnswerCountColumn] = $oResponse->$sAnswerCountColumn;
+        if ($oResponse->hasAttribute($sAnswerCountColumn)) {
+            $sessionSurvey[$sAnswerCountColumn] = $oResponse->$sAnswerCountColumn;
+        }
         Yii::app()->session["survey_{$this->surveyId}"] = $sessionSurvey;
     }
 
