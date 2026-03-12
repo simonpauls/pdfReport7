@@ -338,24 +338,26 @@ class pdfReport extends \PluginBase
                 'caption' => $this->translate('Add attachements of email'),
             ),
         );
-        $pdfReportAttribute['pdfReportPdfGenerator'] = array(
-            'types' => '|', /* upload question type */
-            'category' => $this->translate('Other'),
-            'sortorder' => 100,
-            'inputtype' => 'switch',
-            'default' => 1,
-            'help' => $this->translate('You have limeMpdf plugin allowing more class, but don‘t use pdfreport.css. Then if you need usage of pdfreport.css: you can choose to use old tcpdf system.'),
-            'caption' => $this->translate('Use limeMpdf'),
-        );
-        $pdfReportAttribute['pdfReportCreateToc'] = array(
-            'types' => '|', /* upload question type */
-            'category' => $this->translate('Other'),
-            'sortorder' => 110,
-            'inputtype' => 'switch',
-            'default' => 1,
-            'help' => $this->translate('Plugin limeMpdf allow table of content using h1, h2 etc … then adding title in your pdf set a table of contents.'),
-            'caption' => $this->translate('Create a PDF table of content'),
-        );
+        if (Yii::getPathOfAlias("limeMpdf") || Yii::getPathOfAlias("lime7Mpdf")) {
+            $pdfReportAttribute['pdfReportPdfGenerator'] = array(
+                'types' => '|', /* upload question type */
+                'category' => $this->translate('Other'),
+                'sortorder' => 100,
+                'inputtype' => 'switch',
+                'default' => 1,
+                'help' => $this->translate('You have limeMpdf plugin allowing more class, but don‘t use pdfreport.css. Then if you need usage of pdfreport.css: you can choose to use old tcpdf system.'),
+                'caption' => $this->translate('Use limeMpdf'),
+            );
+            $pdfReportAttribute['pdfReportCreateToc'] = array(
+                'types' => '|', /* upload question type */
+                'category' => $this->translate('Other'),
+                'sortorder' => 110,
+                'inputtype' => 'switch',
+                'default' => 1,
+                'help' => $this->translate('Plugin limeMpdf allow table of content using h1, h2 etc … then adding title in your pdf set a table of contents.'),
+                'caption' => $this->translate('Create a PDF table of content'),
+            );
+        }
 
         $questionAttributes = (array)$this->getEvent()->get('questionAttributes', array());
         $questionAttributes = array_merge($questionAttributes, $pdfReportAttribute);
@@ -707,6 +709,9 @@ class pdfReport extends \PluginBase
         $pdfReplaced = array('<pagebreak>','<pagebreak>','<pagebreak>','<pagebreak>','<pagebreak>');
         $sText = str_replace($pdfSpecific, $pdfReplaced, $sText);
         /* OK, we go */
+        if (!Yii::getPathOfAlias('limeMpdf') && Yii::getPathOfAlias('lime7Mpdf')) {
+            Yii::setPathOfAlias('limeMpdf', Yii::getPathOfAlias('lime7Mpdf'));
+        }
         $pdfHelper = new \limeMpdf\helper\limeMpdfHelper($this->surveyId);
         $extraOtions = array();
         if ($aQuestionsAttributes['pdfReportCreateToc']) {

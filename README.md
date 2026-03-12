@@ -36,11 +36,11 @@ By default, the plugin use [tcpdf](https://tcpdf.org/) and [WriteHTML function](
 
 See more example on tcdpf website : [inline style](https://tcpdf.org/examples/example_006/) or usage of a [css file](https://tcpdf.org/examples/example_061/).
 
-#### With limeMpdf plugin
+#### With lime7Mpdf plugin
 
-When using [limeMpdf plugin](https://gitlab.com/SondagesPro/coreAndTools/limeMpdf), there are already some CSS class inspired by [Bootstrap](https://getbootstrap.com/docs/3.3/css/). See [limeMdpf demo file](https://gitlab.com/SondagesPro/coreAndTools/limeMpdf/-/blob/master/assets/Demo%20of%20limeMpdf.pdf) for a lot of available class.
+When using [lime7Mpdf plugin](https://github.com/simonpauls/lime7Mpdf), there are already some CSS class inspired by [Bootstrap](https://getbootstrap.com/docs/3.3/css/). See [lime7Mdpf demo file](https://github.com/simonpauls/lime7Mpdf/blob/master/assets/Demo%20of%20limeMpdf.pdf) for a lot of available class.
 
-You can update more content with limeMpdf using files in your adapted theme templete files.
+You can update more content with lime7Mpdf using files in your adapted theme templete files.
 
 ### New page
 
