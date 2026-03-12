@@ -3,19 +3,19 @@ pdfReport
 
 Use question text to create a pdf report : send it by email, save in survey.
 
-This plugin is currently compatible with LimeSurvey 3.X and 5.X version
+This plugin is compatible with LimeSurvey 3.X, 5.X, 6.X and 7.X versions.
 
 ## Installation
 
 ### Via GIT
 - Go to your LimeSurvey Directory
 - Change into subdirectory 'plugins'
-- Clone in plugins/pdfReport directory `git clone https://gitlab.com/SondagesPro/ExportAndStats/pdfReport.git pdfReport`
+- Clone in plugins/pdfReport directory `git clone https://github.com/simonpauls/pdfReport7.git pdfReport`
 
 ### Via ZIP dowload
-- Download <https://extensions.sondages.pro/IMG/auto/pdfReport.zip>
-- Extract : `unzip pdfReport.zip`
-- Move the directory to  plugins/ directory inside LimeSurvey
+- Download <https://github.com/simonpauls/pdfReport7/archive/refs/heads/master.zip>
+- Extract : `unzip pdfReport7-master.zip`
+- Move the directory to  plugins/ directory inside LimeSurvey as `pdfReport`
 
 ## Documentation
 - Create a upload question type
@@ -62,9 +62,10 @@ You can check two sample of pdf report:
 ## Home page & Copyright
 - HomePage <http://extensions.sondages.pro/>
 - Copyright © 2015-2022 Denis Chenu <https://sondages.pro>
+- Copyright © 2026 SirPauls <https://github.com/simonpauls/pdfReport7>
 - Copyright © 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
 - Copyright © 2015 Ingeus <http://www.ingeus.fr/>
-- [Issue](https://gitlab.com/SondagesPro/ExportAndStats/pdfReport/-/issues) and [code contribution](https://gitlab.com/SondagesPro/ExportAndStats/pdfReport/-/merge_requests) _No free support_ 
+- [Issue](https://github.com/simonpauls/pdfReport7/issues) and [code contribution](https://github.com/simonpauls/pdfReport7/pulls) _No free support_ 
 - [Professional Support](https://support.sondages.pro)
 - [Donate](https://support.sondages.pro/open.php?topicId=12), [Liberapay](https://liberapay.com/SondagesPro/), [OpenCollective](https://opencollective.com/sondagespro)
 
