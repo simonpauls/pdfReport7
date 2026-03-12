@@ -11,7 +11,7 @@
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 3.0.2
+ * @version 3.0.3
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -943,6 +943,30 @@ class pdfReport extends \PluginBase
                 $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
             }
         }
+        /* Try question id if still not found (q_qid) */
+        if (!$oResponse->hasAttribute($sAnswerColumn)) {
+            if ($oResponse->hasAttribute("q_{$oQuestion->qid}")) {
+                $sAnswerColumn = "q_{$oQuestion->qid}";
+                $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
+            }
+        }
+        /* Final attempt: use getAttributes() to find anything that looks like our question */
+        if (!$oResponse->hasAttribute($sAnswerColumn)) {
+            $aAttributes = $oResponse->getAttributes();
+            foreach (array_keys($aAttributes) as $sAttribute) {
+                /* Check if it contains the qid */
+                if (preg_match('/X' . $oQuestion->qid . '$/', $sAttribute) || preg_match('/_' . $oQuestion->qid . '$/', $sAttribute)) {
+                    $sAnswerColumn = $sAttribute;
+                    $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
+                    break;
+                }
+            }
+        }
+
+        if (!$oResponse->hasAttribute($sAnswerColumn)) {
+            Yii::log("Column $sAnswerColumn or {$oQuestion->title} or q_{$oQuestion->qid} not found in response table for survey {$this->surveyId}. Available columns: " . implode(', ', array_keys($oResponse->getAttributes())), 'error', 'application.plugins.pdfReport');
+            return;
+        }
 
         $uploadSurveyDir = App()->getConfig("uploaddir")
             . DIRECTORY_SEPARATOR
@@ -975,9 +999,9 @@ class pdfReport extends \PluginBase
                 'ext' => 'pdf'
             )
         );
-        $oResponse->$sAnswerColumn = ls_json_encode($aAnswer);
+        $oResponse->setAttribute($sAnswerColumn, ls_json_encode($aAnswer));
         if ($oResponse->hasAttribute($sAnswerCountColumn)) {
-            $oResponse->$sAnswerCountColumn = 1;
+            $oResponse->setAttribute($sAnswerCountColumn, 1);
         }
         if (method_exists($oResponse, 'encryptSave')) {
             $saveResult = $oResponse->encryptSave();
@@ -988,9 +1012,9 @@ class pdfReport extends \PluginBase
             Yii::log($oResponse->getErrors(), 'error', 'application.plugins.pdfReport');
         }
         $sessionSurvey = Yii::app()->session["survey_{$this->surveyId}"];
-        $sessionSurvey[$sAnswerColumn] = $oResponse->$sAnswerColumn;
+        $sessionSurvey[$sAnswerColumn] = $oResponse->getAttribute($sAnswerColumn);
         if ($oResponse->hasAttribute($sAnswerCountColumn)) {
-            $sessionSurvey[$sAnswerCountColumn] = $oResponse->$sAnswerCountColumn;
+            $sessionSurvey[$sAnswerCountColumn] = $oResponse->getAttribute($sAnswerCountColumn);
         }
         Yii::app()->session["survey_{$this->surveyId}"] = $sessionSurvey;
     }
