@@ -929,7 +929,7 @@ class pdfReport extends \PluginBase
         if (!$oSurvey || $oSurvey->active != 'Y') {
             return;
         }
-        $sAnswerColumn = LimeExpressionManager::getFieldName($oQuestion->sid, $oQuestion->gid, $oQuestion->qid);
+        $sAnswerColumn = $oQuestion->getBasicFieldName();
         $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
 
         $oResponse = Response::model($this->surveyId)->find('id=:id', array(':id' => $this->responseId));
