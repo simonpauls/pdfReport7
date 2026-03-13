@@ -11,7 +11,7 @@
  * @copyright 2017 Réseau en scène Languedoc-Roussillon <https://www.reseauenscene.fr/>
  * @copyright 2015 Ingeus <http://www.ingeus.fr/>
  * @license AGPL v3
- * @version 3.0.3
+ * @version 3.0.4
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -47,6 +47,7 @@ class pdfReport extends \PluginBase
      */
     public function init()
     {
+        Yii::log("Initializing pdfReport plugin", 'info', 'application.plugins.pdfReport');
         /* Add the attribute */
         $this->subscribe('newQuestionAttributes', 'addPdfReportAttribute');
         /* Generate and save pdfReport when submit */
@@ -90,6 +91,7 @@ class pdfReport extends \PluginBase
                 $criteria->compare(App()->getDb()->quoteColumnName("t.language"), $language);
             }
             $oQuestionsQid = Question::model()->findAll($criteria);
+            Yii::log("beforeSurveyPage: Found " . count($oQuestionsQid) . " questions with pdfReport attribute", 'info', 'application.plugins.pdfReport');
             $sessionPdfReports = array();
             if (!empty($oQuestionsQid)) {
                 foreach ($oQuestionsQid as $oQuestionQid) {
@@ -374,7 +376,9 @@ class pdfReport extends \PluginBase
         }
         $this->surveyId = $this->getEvent()->get('surveyId');
         $this->responseId = $this->getEvent()->get('responseId');
+        Yii::log("afterSurveyComplete triggered for survey {$this->surveyId}, response {$this->responseId}", 'info', 'application.plugins.pdfReport');
         if (empty($this->responseId)) {
+            Yii::log("No responseId found in afterSurveyComplete event", 'warning', 'application.plugins.pdfReport');
             return;
         }
         $this->doPdfReports(null, true);
@@ -426,46 +430,55 @@ class pdfReport extends \PluginBase
      */
     private function doPdfReports($qid = null, $submit = false)
     {
+        Yii::log("doPdfReports starting for survey {$this->surveyId}, qid: " . ($qid ?? 'null') . ", submit: " . ($submit ? 'true' : 'false'), 'info', 'application.plugins.pdfReport');
+        $oSurvey = Survey::model()->findByPk($this->surveyId);
+        if (!$oSurvey) {
+            Yii::log("Survey {$this->surveyId} not found in doPdfReports", 'error', 'application.plugins.pdfReport');
+            return;
+        }
         $language = Yii::app()->getLanguage();
-        if (!in_array($language, Survey::model()->findByPk($this->surveyId)->getAllLanguages())) {
-            $language = Survey::model()->findByPk($this->surveyId)->getAttribute('language');
+        if (!in_array($language, $oSurvey->getAllLanguages())) {
+            $language = $oSurvey->getAttribute('language');
         }
         // Only in next release $oQuestionAttribute = QuestionAttribute::model()->with('qid')->together()->findAll('sid=:sid and attribute=:attribute and value=:value',array(':sid'=>$iSid,':attribute'=>'pdfReport',':value'=>1));
         $criteria = new CDbCriteria();
-        $criteria->select = 'question.qid as qid';
-        $criteria->join = 'LEFT JOIN {{questions}} as question ON ' . App()->getDb()->quoteColumnName("question.qid") . '=' . App()->getDb()->quoteColumnName("t.qid");
-        $criteria->condition = 'question.sid = :sid and attribute = :attribute and value = :value';
-        $criteria->params = array(':sid' => $this->surveyId,':attribute' => 'pdfReport',':value' => '1');
+        $criteria->select = 't.*';
+        $criteria->join = 'INNER JOIN {{question_attributes}} as questionattributes ON ' . App()->getDb()->quoteColumnName("t.qid") . '=' . App()->getDb()->quoteColumnName("questionattributes.qid");
+        $criteria->condition = 't.sid = :sid AND questionattributes.attribute LIKE :attribute AND (questionattributes.value = :value OR questionattributes.value = :value2)';
+        $criteria->params = array(':sid' => $this->surveyId, ':attribute' => 'pdfReport', ':value' => '1', ':value2' => 'Y');
         /* language */
         if (intval(App()->getConfig("versionnumber")) <= 3) {
-            $criteria->compare(App()->getDb()->quoteColumnName("question.language"), $language);
+            $criteria->addCondition(App()->getDb()->quoteColumnName("t.language") . ' = :language');
+            $criteria->params[':language'] = $language;
         }
         if ($qid) {
-            $criteria->compare(App()->getDb()->quoteColumnName("question.qid"), $qid);
+            $criteria->addCondition(App()->getDb()->quoteColumnName("t.qid") . ' = :qid');
+            $criteria->params[':qid'] = $qid;
         }
-        $aQuestionsQid = QuestionAttribute::model()->findAllAsArray($criteria, array(), true);
-        if ($aQuestionsQid) {
-            foreach ($aQuestionsQid as $aQuestionQid) {
-                $qid = $aQuestionQid['qid'];
+        $oQuestionsQid = Question::model()->findAll($criteria);
+        Yii::log("doPdfReports query found " . count($oQuestionsQid) . " questions", 'info', 'application.plugins.pdfReport');
+        if ($oQuestionsQid) {
+            foreach ($oQuestionsQid as $oQuestion) {
+                $qid = $oQuestion->qid;
+                Yii::log("Processing question $qid for pdfReport", 'info', 'application.plugins.pdfReport');
                 $pdfFile = $this->pdfReportGetPdfFile($qid);
                 if ($pdfFile) {
-                    if (intval(App()->getConfig("versionnumber")) <= 3) {
-                        $oQuestion = Question::model()->findByPk(array('qid' => $qid,'language' => $language));
-                    } else {
-                        $oQuestion = Question::model()->findByPk($qid);
-                    }
+                    Yii::log("Generated PDF file $pdfFile for question $qid", 'info', 'application.plugins.pdfReport');
                     if ($oQuestion->type == "|") {
+                        Yii::log("Saving PDF in file upload for question $qid", 'info', 'application.plugins.pdfReport');
                         $this->pdfReportSaveInFileUpload($oQuestion);
                         $this->setSessionPrintAnswer($oQuestion);
                     }
                     if ($submit) {
+                        Yii::log("Sending PDF by email for question $qid", 'info', 'application.plugins.pdfReport');
                         $this->pdfReportSendByEmail($oQuestion);
                     }
                     unlink($pdfFile);
+                } else {
+                    Yii::log("Failed to generate PDF file for question $qid", 'error', 'application.plugins.pdfReport');
                 }
             }
         }
-            $sessionSurvey = Yii::app()->session["survey_{$this->surveyId}"];
     }
 
     /**
@@ -716,6 +729,7 @@ class pdfReport extends \PluginBase
             $event = new PluginEvent('lime7MpdfBeforePdf');
             App()->getPluginManager()->dispatchEvent($event);
         }
+        Yii::log("Creating limeMpdfHelper instance", 'info', 'application.plugins.pdfReport');
         $pdfHelper = new \limeMpdf\helper\limeMpdfHelper($this->surveyId);
         $extraOtions = array();
         if ($aQuestionsAttributes['pdfReportCreateToc']) {
@@ -1026,13 +1040,15 @@ class pdfReport extends \PluginBase
      */
     private function pdfReportSendByEmail($oQuestion)
     {
+        Yii::log("pdfReportSendByEmail starting for question {$oQuestion->qid}", 'info', 'application.plugins.pdfReport');
         if (version_compare(Yii::app()->getConfig('versionnumber'), "4.0.0", "<")) {
             $this->pdfReportSendByEmailLegacy($oQuestion);
             return;
         }
         $aQuestionsAttributes = QuestionAttribute::model()->getQuestionAttributes($oQuestion->qid, Yii::app()->getLanguage());
-        $questionAttributeEmails = trim($aQuestionsAttributes['pdfReportSendByEmailMail']);
+        $questionAttributeEmails = trim($aQuestionsAttributes['pdfReportSendByEmailMail'] ?? '');
         if ($questionAttributeEmails == "") {
+            Yii::log("No email addresses configured for question {$oQuestion->qid}", 'info', 'application.plugins.pdfReport');
             return;
         }
 
