@@ -54,6 +54,8 @@ class pdfReport extends \PluginBase
         $this->subscribe('afterSurveyComplete', 'afterSurveyComplete');
         /* Fill session survey if needed, and register before twig */
         $this->subscribe('beforeSurveyPage');
+        /* Trigger auto download on thank you page */
+        $this->subscribe('beforeSurveyPage', 'triggerAutoDownload');
         /* Remove answers (and help) part And do needed pdf (hidden group) */
         $this->subscribe('beforeQuestionRender', 'hideAnswerPart');
         /* Allow printing on current */
@@ -121,6 +123,55 @@ class pdfReport extends \PluginBase
             $this->subscribe('beforeTwigRenderTemplate', 'doPdfReportsByStep');
             $this->unsubscribe('beforeQuestionRender');
             $this->subscribe('beforeQuestionRender', 'beforeQuestionRender');
+        }
+    }
+
+    /**
+     * Trigger auto download on thank you page
+     */
+    public function triggerAutoDownload()
+    {
+        $surveyId = $this->getEvent()->get('surveyId');
+        $sessionSurvey = App()->session["survey_{$surveyId}"];
+        if (empty($sessionSurvey['pdfReportAutoDownload'])) {
+            return;
+        }
+
+        /* Check if we are on the completed page */
+        $isCompleted = false;
+        if (App()->getController() instanceof \SurveyIndex && App()->getController()->getAction()->getId() == 'action' && isset($sessionSurvey['step']) && $sessionSurvey['step'] == 'completed') {
+            $isCompleted = true;
+        }
+        /* LimeSurvey 7 specific check for completed page */
+        if (!$isCompleted && App()->getController() instanceof \SurveyIndex && isset($sessionSurvey['step']) && $sessionSurvey['step'] == 'completed') {
+            $isCompleted = true;
+        }
+
+        if ($isCompleted) {
+            /* Find the qid that has replace=2 (print answer replacement) or any qid that should be downloaded */
+            $aSessionPrintRigth = App()->session["pdfReportPrintRight"];
+            if (!empty($aSessionPrintRigth[$surveyId]['replace'])) {
+                $qid = $aSessionPrintRigth[$surveyId]['replace'];
+                $url = App()->createUrl('plugins/direct', array(
+                    'plugin' => 'pdfReport',
+                    'function' => 'publicPdfDownload',
+                    'surveyid' => $surveyId,
+                    'qid' => $qid,
+                    'srid' => $sessionSurvey['srid']
+                ));
+                /* Ensure URL uses same protocol as current request (handle HTTP/HTTPS) */
+                if (App()->getRequest()->isSecureConnection) {
+                    $url = str_replace('http://', 'https://', $url);
+                } else {
+                    $url = str_replace('https://', 'http://', $url);
+                }
+
+                $script = "window.location.href = '{$url}';";
+                App()->getClientScript()->registerScript('pdfReportAutoDownload', $script, \CClientScript::POS_READY);
+            }
+            /* Clean up session */
+            unset($sessionSurvey['pdfReportAutoDownload']);
+            App()->session["survey_{$surveyId}"] = $sessionSurvey;
         }
     }
 
@@ -219,7 +270,7 @@ class pdfReport extends \PluginBase
         $pdfReportAttribute = array(
             'pdfReport' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 1,
                 'inputtype' => 'switch',
                 'default' => 0,
@@ -228,7 +279,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportTitle' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 10,
                 'inputtype' => 'text',
                 'default' => '{SITENAME}',
@@ -239,7 +290,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSubTitle' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 11,
                 'inputtype' => 'text',
                 'default' => '{SURVEYNAME}',
@@ -250,7 +301,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportContent' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 15,
                 'inputtype' => 'textarea',
                 'default' => "",
@@ -262,7 +313,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportPrintAnswer' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 20,
                 'inputtype' => 'singleselect',
                 'options' => array(
@@ -276,7 +327,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSavedFileName' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 30,
                 'inputtype' => 'text',
                 'default' => '',
@@ -290,7 +341,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSanitizeSavedFileName' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 30,
                 'inputtype' => 'singleselect',//'buttongroup',
                 'options' => array(
@@ -305,7 +356,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSendByEmailMail' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 40,
                 'inputtype' => 'text',
                 'default' => '',
@@ -316,7 +367,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSendByEmailContent' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 45,
                 'inputtype' => 'singleselect',//'buttongroup',
                 'options' => array(
@@ -332,7 +383,7 @@ class pdfReport extends \PluginBase
             ),
             'pdfReportSendByEmailAttachment' => array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 50,
                 'inputtype' => 'switch',
                 'default' => 1,
@@ -343,7 +394,7 @@ class pdfReport extends \PluginBase
         if (Yii::getPathOfAlias("limeMpdf") || Yii::getPathOfAlias("lime7Mpdf")) {
             $pdfReportAttribute['pdfReportPdfGenerator'] = array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 100,
                 'inputtype' => 'switch',
                 'default' => 1,
@@ -352,7 +403,7 @@ class pdfReport extends \PluginBase
             );
             $pdfReportAttribute['pdfReportCreateToc'] = array(
                 'types' => '|', /* upload question type */
-                'category' => $this->translate('Other'),
+                'category' => 'PDF Bericht',
                 'sortorder' => 110,
                 'inputtype' => 'switch',
                 'default' => 1,
@@ -382,6 +433,12 @@ class pdfReport extends \PluginBase
             return;
         }
         $this->doPdfReports(null, true);
+        /* Mark for auto download */
+        $sessionSurvey = App()->session["survey_{$this->surveyId}"];
+        if (!empty($sessionSurvey)) {
+            $sessionSurvey['pdfReportAutoDownload'] = true;
+            App()->session["survey_{$this->surveyId}"] = $sessionSurvey;
+        }
     }
 
     /**
@@ -468,10 +525,14 @@ class pdfReport extends \PluginBase
                         Yii::log("Saving PDF in file upload for question $qid", 'info', 'application.plugins.pdfReport');
                         $this->pdfReportSaveInFileUpload($oQuestion);
                         $this->setSessionPrintAnswer($oQuestion);
+                    } else {
+                        Yii::log("Question type is not '|' but '{$oQuestion->type}' for question $qid", 'info', 'application.plugins.pdfReport');
                     }
                     if ($submit) {
-                        Yii::log("Sending PDF by email for question $qid", 'info', 'application.plugins.pdfReport');
+                        Yii::log("Sending PDF by email for question $qid because submit is true", 'info', 'application.plugins.pdfReport');
                         $this->pdfReportSendByEmail($oQuestion);
+                    } else {
+                        Yii::log("Not sending email for question $qid because submit is false", 'info', 'application.plugins.pdfReport');
                     }
                     unlink($pdfFile);
                 } else {
@@ -814,8 +875,10 @@ class pdfReport extends \PluginBase
             //~ 'h5' => array(0 => array('h' => 0, 'n' => 0), 1 => array('h' => 0, 'n' => 0)),
             //~ 'h6' => array(0 => array('h' => 0, 'n' => 0), 1 => array('h' => 0, 'n' => 0)),
         );
-        if (!empty(App()->getConfig("pdfreport_tagsv"))) {
-            $tagvs = array_merge($tagvs, App()->getConfig("pdfreport_tagsv"));
+        /** @var array|string|null $customTagvs */
+        $customTagvs = App()->getConfig("pdfreport_tagsv");
+        if (is_array($customTagvs)) {
+            $tagvs = array_merge($tagvs, $customTagvs);
         }
         $oPDF->setHtmlVSpace($tagvs);
         $pdfSpecific = array('<br pagebreak="true" />','<br pagebreak="true"/>','<br pagebreak="true">','<page>','</page>');
@@ -929,7 +992,7 @@ class pdfReport extends \PluginBase
         if (!$oSurvey || $oSurvey->active != 'Y') {
             return;
         }
-        $sAnswerColumn = LimeExpressionManager::getFieldName($oQuestion->sid, $oQuestion->gid, $oQuestion->qid);
+        $sAnswerColumn = $oQuestion->getBasicFieldName();
         $sAnswerCountColumn = "{$sAnswerColumn}_filecount";
 
         $oResponse = Response::model($this->surveyId)->find('id=:id', array(':id' => $this->responseId));
@@ -1054,15 +1117,19 @@ class pdfReport extends \PluginBase
 
         $questionAttributeEmails = $this->EMProcessString($questionAttributeEmails, $oQuestion->qid);
         $aValidRecipient = LimeMailer::validateAddresses($questionAttributeEmails);
+        Yii::log("Valid recipients found: " . implode(', ', $aValidRecipient), 'info', 'application.plugins.pdfReport');
         if (empty($aValidRecipient)) {
+            Yii::log("No valid recipients found for question {$oQuestion->qid}", 'warning', 'application.plugins.pdfReport');
             return;
         }
         $oSurvey = Survey::model()->findByPk($this->surveyId);
         $mailer = \LimeMailer::getInstance();
         $mailer->mailLanguage = App()->getLanguage();
         $mailer->setSurvey($this->surveyId);
+        Yii::log("Setting email type to: " . $aQuestionsAttributes['pdfReportSendByEmailContent'], 'info', 'application.plugins.pdfReport');
         $mailer->setTypeWithRaw($aQuestionsAttributes['pdfReportSendByEmailContent'], App()->getLanguage());
         $sFile = $this->pdfReportGetPdfFileName($oQuestion->title);
+        Yii::log("Attaching file: $sFile", 'info', 'application.plugins.pdfReport');
         $mailer->addAttachment(
             $sFile,
             $this->pdfReportGetPdfSavedFileName($oQuestion)
@@ -1070,9 +1137,9 @@ class pdfReport extends \PluginBase
         if ($aQuestionsAttributes['pdfReportSendByEmailAttachment']) {
             $mailer->addAttachementsByType();
         }
-        /* Update type */
         $mailer->emailType = 'plugin_pdfReport';
 
+        Yii::log("Sending email to recipients: " . implode(', ', $aValidRecipient), 'info', 'application.plugins.pdfReport');
         foreach ($aValidRecipient as $sRecipient) {
             $mailer->setTo($sRecipient);
             if (!$mailer->SendMessage()) {
